@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bitácora de Informes</title>
+<meta name="theme-color" content="#1B1E22" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#1B1E22;
+    --panel:#24282E;
+    --panel-2:#2C3138;
+    --border:#383D44;
+    --text:#E8E6E1;
+    --text-dim:#9A9690;
+    --accent:#C87D2F;
+    --accent-soft:#3A2C1E;
+    --accent-2:#5C9797;
+    --accent-2-soft:#20302F;
+    --danger:#C1543C;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -200px, #262b32 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:100px;
+  }
+  ::selection{background:var(--accent);color:#1B1E22;}
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:rgba(27,30,34,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    padding:18px 18px 14px;
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .brand .mark{
+    width:10px;height:10px;border-radius:2px;background:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:22px;
+    letter-spacing:0.5px;
+    margin:0;
+    text-transform:uppercase;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:1.5px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    margin:2px 0 0 20px;
+  }
+
+  .searchbar{
+    margin-top:14px;
+    display:flex; gap:8px;
+  }
+  .searchbar input{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:11px 14px;
+    border-radius:var(--radius);
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    outline:none;
+  }
+  .searchbar input:focus{border-color:var(--accent);}
+  .searchbar input::placeholder{color:var(--text-dim);}
+
+  .filters{
+    display:flex; gap:8px; margin-top:10px; overflow-x:auto; padding-bottom:2px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.5px;
+    padding:6px 12px;
+    border-radius:20px;
+    border:1px solid var(--border);
+    background:var(--panel);
+    color:var(--text-dim);
+    white-space:nowrap;
+    cursor:pointer;
+    user-select:none;
+    transition:all .15s ease;
+  }
+  .chip.active{
+    border-color:var(--accent);
+    color:var(--accent);
+    background:var(--accent-soft);
+  }
+
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:18px;
+  }
+
+  #estado{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    text-align:center;
+    padding:30px 10px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  @media(min-width:640px){
+    .grid{grid-template-columns:1fr 1fr;}
+  }
+
+  .ficha{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 16px 14px;
+    margin-top:14px;
+  }
+  .tab{
+    position:absolute;
+    top:-11px; left:14px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-bottom:none;
+    padding:3px 10px 5px;
+    border-radius:6px 6px 0 0;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.8px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    max-width:70%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .stamp{
+    position:absolute;
+    top:14px; right:14px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:1px;
+    padding:3px 8px;
+    border-radius:4px;
+    border:1px dashed;
+    transform:rotate(3deg);
+    text-transform:uppercase;
+  }
+  .stamp.propio{color:var(--accent-2);border-color:var(--accent-2);background:var(--accent-2-soft);}
+  .stamp.recopilado{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+
+  .ficha h3{
+    font-family:'Oswald',sans-serif;
+    font-weight:500;
+    font-size:17px;
+    margin:6px 70px 6px 0;
+    line-height:1.25;
+  }
+  .meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+  .notas{
+    font-size:13.5px;
+    color:#CFCBC4;
+    line-height:1.5;
+    margin:8px 0;
+    white-space:pre-wrap;
+    max-height:4.6em;
+    overflow:hidden;
+  }
+  .notas.expandido{max-height:none;}
+  .vermas{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--accent);
+    cursor:pointer;
+    background:none;border:none;padding:0;margin-top:2px;
+  }
+  .tags{
+    display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;
+  }
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    color:var(--text-dim);
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    padding:3px 8px;
+    border-radius:4px;
+  }
+  .foot{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:12px; padding-top:10px; border-top:1px solid var(--border);
+  }
+  .archivo-link{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--accent-2);
+    text-decoration:none;
+    display:flex; align-items:center; gap:5px;
+    background:none; border:none; padding:0; cursor:pointer;
+  }
+  .archivo-link:hover{text-decoration:underline;}
+  .del{
+    background:none;border:none;
+    color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    cursor:pointer;
+  }
+  .del:hover{color:var(--danger);}
+
+  /* Botón flotante */
+  .fab{
+    position:fixed;
+    right:20px; bottom:22px;
+    width:56px; height:56px;
+    border-radius:16px;
+    background:var(--accent);
+    color:#1B1E22;
+    border:none;
+    font-size:28px;
+    font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(200,125,47,0.35);
+    z-index:30;
+  }
+  .fab:active{transform:scale(0.96);}
+
+  /* Panel (bottom sheet) */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(10,11,13,0.6);
+    z-index:40;
+    display:none;
+  }
+  .overlay.show{display:block;}
+  .sheet{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    max-width:760px; margin:0 auto;
+    background:var(--panel);
+    border-top:1px solid var(--border);
+    border-radius:18px 18px 0 0;
+    z-index:41;
+    padding:18px 18px 24px;
+    transform:translateY(100%);
+    transition:transform .25s ease;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .sheet.show{transform:translateY(0);}
+  .sheet-handle{
+    width:36px; height:4px; background:var(--border); border-radius:3px;
+    margin:0 auto 14px;
+  }
+  .sheet h2{
+    font-family:'Oswald',sans-serif;
+    font-size:18px; text-transform:uppercase; margin:0 0 16px;
+  }
+  label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.8px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    margin:14px 0 6px;
+  }
+  input[type=text], input[type=date], textarea, select{
+    width:100%;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    outline:none;
+  }
+  input[type=text]:focus, textarea:focus, select:focus{border-color:var(--accent);}
+  textarea{min-height:90px; resize:vertical; font-family:'Inter',sans-serif;}
+  .tiporow{display:flex; gap:8px;}
+  .tipo-btn{
+    flex:1;
+    text-align:center;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .tipo-btn.active.propio{border-color:var(--accent-2); color:var(--accent-2); background:var(--accent-2-soft);}
+  .tipo-btn.active.recopilado{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+
+  .fileinput{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel-2); border:1px dashed var(--border);
+    border-radius:8px; padding:10px 12px;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .fileinput input{display:none;}
+
+  .sheet-actions{
+    display:flex; gap:10px; margin-top:20px;
+  }
+  .btn{
+    flex:1;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn.guardar{background:var(--accent); color:#1B1E22;}
+  .btn.cancelar{background:var(--panel-2); color:var(--text-dim); border:1px solid var(--border);}
+  .btn:disabled{opacity:0.5;}
+
+  .toast{
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%);
+    background:var(--panel-2); border:1px solid var(--border);
+    color:var(--text); padding:10px 16px; border-radius:8px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    z-index:50; opacity:0; transition:opacity .2s ease;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+
+  /* Vista previa de archivo */
+  .preview-overlay{
+    position:fixed; inset:0;
+    background:rgba(10,11,13,0.85);
+    z-index:60;
+    display:none;
+    flex-direction:column;
+  }
+  .preview-overlay.show{display:flex;}
+  .preview-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+  }
+  .preview-titulo{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--text);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    max-width:60%;
+  }
+  .preview-acciones{display:flex; gap:8px;}
+  .preview-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    padding:7px 12px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--text);
+    text-decoration:none;
+    cursor:pointer;
+  }
+  .preview-btn.descargar{color:var(--accent-2); border-color:var(--accent-2);}
+  .preview-btn.cerrar{color:var(--text-dim);}
+  .preview-frame-wrap{
+    flex:1;
+    background:#0f1013;
+  }
+  .preview-frame-wrap iframe{
+    width:100%; height:100%; border:none;
+  }
+  .preview-nota{
+    padding:10px 16px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    background:var(--panel);
+    border-top:1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div id="loginGate" style="position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;">
+  <div class="brand"><span class="mark"></span><h1>Bitácora</h1></div>
+  <p style="color:var(--text-dim);font-family:'Inter',sans-serif;font-size:14px;max-width:320px;">Conecta tu Google Drive para guardar y ver tus informes.</p>
+  <button id="btnConectarGoogle" class="btn guardar" style="flex:none;padding:12px 22px;">Conectar con Google</button>
+  <div id="loginEstado" style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;"></div>
+</div>
+
+<header class="top">
+  <div class="brand"><span class="mark"></span><h1>Bitácora</h1></div>
+  <div class="eyebrow">Archivo técnico personal</div>
+  <div class="searchbar">
+    <input id="buscador" type="text" placeholder="Buscar por palabra clave, categoría o etiqueta…" />
+  </div>
+  <div class="filters">
+    <div class="chip active" data-tipo="todos">Todos</div>
+    <div class="chip" data-tipo="propio">Míos</div>
+    <div class="chip" data-tipo="recopilado">Recopilados</div>
+  </div>
+</header>
+
+<main>
+  <div id="estado"></div>
+  <div class="grid" id="lista"></div>
+</main>
+
+<button class="fab" id="btnAbrir" title="Agregar informe">+</button>
+
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <h2>Nuevo informe</h2>
+
+  <label>Tipo</label>
+  <div class="tiporow">
+    <div class="tipo-btn active propio" data-tipo="propio">Propio</div>
+    <div class="tipo-btn recopilado" data-tipo="recopilado">Recopilado</div>
+  </div>
+
+  <label>Título</label>
+  <input type="text" id="f_titulo" placeholder="Ej: Mantenimiento de UPS marca X" />
+
+  <label>Categoría</label>
+  <input type="text" id="f_categoria" placeholder="Ej: Redes, Servidores, Cliente ABC…" />
+
+  <label>Etiquetas (separadas por coma)</label>
+  <input type="text" id="f_tags" placeholder="Ej: firewall, vpn, seguridad" />
+
+  <label>Notas / descripción</label>
+  <textarea id="f_notas" placeholder="Explica qué hiciste, qué aprendiste o qué contiene este informe…"></textarea>
+
+  <label>Fecha</label>
+  <input type="date" id="f_fecha" />
+
+  <label>Archivo (PDF o Word, opcional)</label>
+  <label class="fileinput" id="labelArchivo">
+    <span id="nombreArchivo">Toca para elegir un archivo…</span>
+    <input type="file" id="f_archivo" accept=".pdf,.doc,.docx" />
+  </label>
+
+  <div class="sheet-actions">
+    <button class="btn cancelar" id="btnCancelar">Cancelar</button>
+    <button class="btn guardar" id="btnGuardar">Guardar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-bar">
+    <span class="preview-titulo" id="previewTitulo">Archivo</span>
+    <div class="preview-acciones">
+      <button class="preview-btn descargar" id="previewDescargar">Descargar</button>
+      <button class="preview-btn cerrar" id="previewCerrar">Cerrar ✕</button>
+    </div>
+  </div>
+  <div class="preview-frame-wrap">
+    <iframe id="previewFrame" src=""></iframe>
+  </div>
+  <div class="preview-nota" id="previewNota"></div>
+</div>
+
+<script>
+  // ==================== CONFIG GOOGLE DRIVE ====================
+  const CLIENT_ID = "704703107710-h8htkaksigu8289b6gibg0nmin4qpb2n.apps.googleusercontent.com";
+  const SCOPES = "https://www.googleapis.com/auth/drive.file";
+  const FOLDER_NAME = "BitacoraInformes";
+  const DATA_FILE_NAME = "bitacora-datos.json";
+
+  let accessToken = localStorage.getItem("gd_access_token") || null;
+  let tokenExpiry = parseInt(localStorage.getItem("gd_token_expiry") || "0", 10);
+  let folderId = localStorage.getItem("gd_folder_id") || null;
+  let dataFileId = localStorage.getItem("gd_data_file_id") || null;
+  let tokenClient = null;
+
+  function guardarToken(token, expiresInSec){
+    accessToken = token;
+    tokenExpiry = Date.now() + (expiresInSec * 1000);
+    localStorage.setItem("gd_access_token", accessToken);
+    localStorage.setItem("gd_token_expiry", String(tokenExpiry));
+  }
+
+  function ensureToken(interactivo){
+    return new Promise((resolve, reject)=>{
+      if(accessToken && Date.now() < tokenExpiry - 60000){
+        resolve(accessToken);
+        return;
+      }
+      if(!tokenClient){
+        reject(new Error("Google Identity Services no cargó todavía. Refresca la página."));
+        return;
+      }
+      tokenClient.callback = (resp)=>{
+        if(resp.error){ reject(new Error(resp.error)); return; }
+        guardarToken(resp.access_token, resp.expires_in || 3600);
+        resolve(accessToken);
+      };
+      tokenClient.requestAccessToken({ prompt: interactivo ? "consent" : "" });
+    });
+  }
+
+  async function driveFetch(url, options={}){
+    const token = await ensureToken(false);
+    options.headers = Object.assign({}, options.headers, { Authorization: "Bearer " + token });
+    const res = await fetch(url, options);
+    if(!res.ok){
+      const texto = await res.text().catch(()=> "");
+      throw new Error("Drive: " + res.status + " " + texto);
+    }
+    return res;
+  }
+
+  async function encontrarOcrearCarpeta(){
+    if(folderId) return folderId;
+    const q = encodeURIComponent(`mimeType='application/vnd.google-apps.folder' and name='${FOLDER_NAME}' and trashed=false`);
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+    const data = await res.json();
+    if(data.files && data.files.length){
+      folderId = data.files[0].id;
+    }else{
+      const res2 = await driveFetch("https://www.googleapis.com/drive/v3/files", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: FOLDER_NAME, mimeType: "application/vnd.google-apps.folder" })
+      });
+      const nueva = await res2.json();
+      folderId = nueva.id;
+    }
+    localStorage.setItem("gd_folder_id", folderId);
+    return folderId;
+  }
+
+  async function encontrarOcrearArchivoDatos(){
+    if(dataFileId) return dataFileId;
+    const q = encodeURIComponent(`name='${DATA_FILE_NAME}' and '${folderId}' in parents and trashed=false`);
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+    const data = await res.json();
+    if(data.files && data.files.length){
+      dataFileId = data.files[0].id;
+    }else{
+      const metadata = { name: DATA_FILE_NAME, parents: [folderId] };
+      const boundary = "-------bitacora" + Date.now();
+      const body =
+        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\nContent-Type: application/json\r\n\r\n[]\r\n` +
+        `--${boundary}--`;
+      const res2 = await driveFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id", {
+        method: "POST",
+        headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+        body
+      });
+      const nuevo = await res2.json();
+      dataFileId = nuevo.id;
+    }
+    localStorage.setItem("gd_data_file_id", dataFileId);
+    return dataFileId;
+  }
+
+  async function inicializarDrive(){
+    await encontrarOcrearCarpeta();
+    await encontrarOcrearArchivoDatos();
+  }
+
+  async function cargarDatos(){
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${dataFileId}?alt=media`);
+    const texto = await res.text();
+    try{ return JSON.parse(texto || "[]"); }catch(e){ return []; }
+  }
+
+  async function guardarDatos(arr){
+    await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${dataFileId}?uploadType=media`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(arr)
+    });
+  }
+
+  async function subirArchivo(file){
+    const metadata = { name: file.name, parents: [folderId] };
+    const boundary = "-------bitacora" + Date.now();
+    const delimiter = `--${boundary}\r\n`;
+    const closeDelim = `\r\n--${boundary}--`;
+
+    const metadataPart = delimiter + "Content-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(metadata) + "\r\n";
+    const filePartHeader = delimiter + "Content-Type: " + (file.type || "application/octet-stream") + "\r\n\r\n";
+
+    // Usamos Blob para juntar texto + el archivo binario sin corromper sus bytes.
+    const cuerpo = new Blob([metadataPart, filePartHeader, file, closeDelim]);
+
+    const token = await ensureToken(false);
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": `multipart/related; boundary=${boundary}`
+      },
+      body: cuerpo
+    });
+    if(!res.ok) throw new Error("No se pudo subir el archivo (" + res.status + ")");
+    return await res.json();
+  }
+
+  async function borrarArchivoDrive(fileId){
+    try{
+      await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trashed: true })
+      });
+    }catch(e){ /* si falla, no bloqueamos el borrado del registro */ }
+  }
+
+  async function descargarArchivo(fileId, nombre){
+    try{
+      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombre || "archivo";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 4000);
+    }catch(err){
+      mostrarToast("No se pudo descargar: " + err.message);
+    }
+  }
+  // ==================== FIN CONFIG GOOGLE DRIVE ====================
+
+  const lista = document.getElementById("lista");
+  const estado = document.getElementById("estado");
+  const buscador = document.getElementById("buscador");
+  const chips = document.querySelectorAll(".chip");
+  const toast = document.getElementById("toast");
+
+  let filtroTipo = "todos";
+  let terminoBusqueda = "";
+  let debounceTimer = null;
+
+  function mostrarToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"), 2200);
+  }
+
+  function escapeHtml(str){
+    return (str || "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function formatearFecha(f){
+    if(!f) return "";
+    const d = new Date(f + "T00:00:00");
+    return d.toLocaleDateString("es-PE", {day:"2-digit", month:"short", year:"numeric"});
+  }
+
+  async function cargar(){
+    estado.textContent = "Cargando…";
+    lista.innerHTML = "";
+
+    let data;
+    try{
+      data = await cargarDatos();
+    }catch(error){
+      estado.textContent = "No se pudo cargar: " + error.message;
+      return;
+    }
+
+    if(filtroTipo !== "todos"){
+      data = data.filter(item => item.tipo === filtroTipo);
+    }
+    if(terminoBusqueda.trim()){
+      const q = terminoBusqueda.trim().toLowerCase();
+      data = data.filter(item =>
+        (item.titulo||"").toLowerCase().includes(q) ||
+        (item.notas||"").toLowerCase().includes(q) ||
+        (item.etiquetas||"").toLowerCase().includes(q) ||
+        (item.categoria||"").toLowerCase().includes(q)
+      );
+    }
+    data = data.slice().sort((a,b)=>{
+      if(a.fecha !== b.fecha) return (b.fecha||"").localeCompare(a.fecha||"");
+      return (b.created_at||"").localeCompare(a.created_at||"");
+    });
+
+    if(!data || data.length === 0){
+      estado.textContent = terminoBusqueda || filtroTipo !== "todos"
+        ? "No hay informes que coincidan con la búsqueda."
+        : "Todavía no agregaste ningún informe. Toca “+” para empezar.";
+      return;
+    }
+
+    estado.textContent = "";
+    lista.innerHTML = data.map(renderFicha).join("");
+
+    lista.querySelectorAll("[data-vermas]").forEach(btn=>{
+      btn.addEventListener("click", (e)=>{
+        const notas = btn.closest(".ficha").querySelector(".notas");
+        notas.classList.toggle("expandido");
+        btn.textContent = notas.classList.contains("expandido") ? "Ver menos" : "Ver más";
+      });
+    });
+
+    lista.querySelectorAll("[data-del]").forEach(btn=>{
+      btn.addEventListener("click", ()=> eliminar(btn.getAttribute("data-del")));
+    });
+
+    lista.querySelectorAll("[data-preview]").forEach(btn=>{
+      btn.addEventListener("click", ()=> abrirPreview(btn.getAttribute("data-preview"), btn.getAttribute("data-nombre"), btn.getAttribute("data-link")));
+    });
+  }
+
+  function renderFicha(item){
+    const etiquetas = (item.etiquetas || "")
+      .split(",").map(t=>t.trim()).filter(Boolean);
+
+    const archivoHtml = item.archivo_id
+      ? `<button class="archivo-link" data-preview="${escapeHtml(item.archivo_id)}" data-nombre="${escapeHtml(item.archivo_nombre || "archivo")}" data-link="${escapeHtml(item.archivo_link || "")}">👁 ${escapeHtml(item.archivo_nombre || "Ver archivo")}</button>`
+      : `<span></span>`;
+
+    return `
+    <div class="ficha">
+      <div class="tab">${escapeHtml(item.categoria || "Sin categoría")}</div>
+      <div class="stamp ${item.tipo}">${item.tipo === "propio" ? "Propio" : "Recopilado"}</div>
+      <h3>${escapeHtml(item.titulo)}</h3>
+      <div class="meta">${formatearFecha(item.fecha)}</div>
+      ${item.notas ? `<div class="notas">${escapeHtml(item.notas)}</div>
+      <button class="vermas" data-vermas>Ver más</button>` : ""}
+      ${etiquetas.length ? `<div class="tags">${etiquetas.map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+      <div class="foot">
+        ${archivoHtml}
+        <button class="del" data-del="${item.id}">Eliminar</button>
+      </div>
+    </div>`;
+  }
+
+  async function eliminar(id){
+    if(!confirm("¿Eliminar este informe? Esta acción no se puede deshacer.")) return;
+    try{
+      const data = await cargarDatos();
+      const item = data.find(i => i.id === id);
+      const restante = data.filter(i => i.id !== id);
+      await guardarDatos(restante);
+      if(item && item.archivo_id) await borrarArchivoDrive(item.archivo_id);
+      mostrarToast("Informe eliminado");
+      cargar();
+    }catch(error){
+      mostrarToast("Error al eliminar: " + error.message);
+    }
+  }
+
+  buscador.addEventListener("input", (e)=>{
+    terminoBusqueda = e.target.value;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(cargar, 350);
+  });
+
+  chips.forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      chips.forEach(c=>c.classList.remove("active"));
+      chip.classList.add("active");
+      filtroTipo = chip.getAttribute("data-tipo");
+      cargar();
+    });
+  });
+
+  // ---- Panel para agregar informe ----
+  const overlay = document.getElementById("overlay");
+  const sheet = document.getElementById("sheet");
+  const btnAbrir = document.getElementById("btnAbrir");
+  const btnCancelar = document.getElementById("btnCancelar");
+  const btnGuardar = document.getElementById("btnGuardar");
+  const tipoBtns = document.querySelectorAll(".tipo-btn");
+  const fArchivo = document.getElementById("f_archivo");
+  const nombreArchivo = document.getElementById("nombreArchivo");
+
+  let tipoSeleccionado = "propio";
+
+  function abrirPanel(){
+    document.getElementById("f_fecha").value = new Date().toISOString().slice(0,10);
+    overlay.classList.add("show");
+    sheet.classList.add("show");
+  }
+  function cerrarPanel(){
+    overlay.classList.remove("show");
+    sheet.classList.remove("show");
+    limpiarFormulario();
+  }
+  function limpiarFormulario(){
+    document.getElementById("f_titulo").value = "";
+    document.getElementById("f_categoria").value = "";
+    document.getElementById("f_tags").value = "";
+    document.getElementById("f_notas").value = "";
+    fArchivo.value = "";
+    nombreArchivo.textContent = "Toca para elegir un archivo…";
+    tipoSeleccionado = "propio";
+    tipoBtns.forEach(b=>b.classList.remove("active"));
+    document.querySelector('.tipo-btn[data-tipo="propio"]').classList.add("active");
+  }
+
+  btnAbrir.addEventListener("click", abrirPanel);
+  btnCancelar.addEventListener("click", cerrarPanel);
+  overlay.addEventListener("click", cerrarPanel);
+
+  tipoBtns.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      tipoBtns.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      tipoSeleccionado = btn.getAttribute("data-tipo");
+    });
+  });
+
+  fArchivo.addEventListener("change", ()=>{
+    nombreArchivo.textContent = fArchivo.files[0] ? fArchivo.files[0].name : "Toca para elegir un archivo…";
+  });
+
+  btnGuardar.addEventListener("click", async ()=>{
+    const titulo = document.getElementById("f_titulo").value.trim();
+    if(!titulo){ mostrarToast("Ponle un título al informe"); return; }
+
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = "Guardando…";
+
+    try{
+      let archivo_id = null;
+      let archivo_nombre = null;
+      let archivo_link = null;
+      const file = fArchivo.files[0];
+
+      if(file){
+        const subido = await subirArchivo(file);
+        archivo_id = subido.id;
+        archivo_nombre = subido.name;
+        archivo_link = subido.webViewLink || null;
+      }
+
+      const nuevoItem = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2,8),
+        titulo,
+        tipo: tipoSeleccionado,
+        categoria: document.getElementById("f_categoria").value.trim(),
+        etiquetas: document.getElementById("f_tags").value.trim(),
+        notas: document.getElementById("f_notas").value.trim(),
+        fecha: document.getElementById("f_fecha").value || new Date().toISOString().slice(0,10),
+        archivo_id,
+        archivo_nombre,
+        archivo_link,
+        created_at: new Date().toISOString()
+      };
+
+      const datosActuales = await cargarDatos();
+      datosActuales.push(nuevoItem);
+      await guardarDatos(datosActuales);
+
+      mostrarToast("Informe guardado");
+      cerrarPanel();
+      cargar();
+    }catch(err){
+      mostrarToast("Error: " + err.message);
+    }finally{
+      btnGuardar.disabled = false;
+      btnGuardar.textContent = "Guardar";
+    }
+  });
+
+  // ---- Vista previa de archivos (sin descargar) ----
+  const previewOverlay = document.getElementById("previewOverlay");
+  const previewFrame = document.getElementById("previewFrame");
+  const previewTitulo = document.getElementById("previewTitulo");
+  const previewDescargar = document.getElementById("previewDescargar");
+  const previewCerrar = document.getElementById("previewCerrar");
+  const previewNota = document.getElementById("previewNota");
+
+  function abrirPreview(fileId, nombre, link){
+    previewTitulo.textContent = nombre;
+    previewDescargar.onclick = ()=> descargarArchivo(fileId, nombre);
+    previewFrame.src = `https://drive.google.com/file/d/${fileId}/preview`;
+    previewNota.textContent = "";
+    previewOverlay.classList.add("show");
+  }
+  function cerrarPreview(){
+    previewOverlay.classList.remove("show");
+    previewFrame.src = "";
+  }
+  previewCerrar.addEventListener("click", cerrarPreview);
+
+  // ---- Registro del service worker (para poder instalar la app) ----
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", ()=>{
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    });
+  }
+
+  // ---- Login con Google / arranque ----
+  const loginGate = document.getElementById("loginGate");
+  const loginEstado = document.getElementById("loginEstado");
+  const btnConectarGoogle = document.getElementById("btnConectarGoogle");
+
+  async function iniciarApp(){
+    loginEstado.textContent = "Conectando con Drive…";
+    try{
+      await inicializarDrive();
+      loginGate.style.display = "none";
+      cargar();
+    }catch(err){
+      loginEstado.textContent = "Error al conectar: " + err.message;
+    }
+  }
+
+  function esperarGis(){
+    if(window.google && google.accounts && google.accounts.oauth2){
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: ()=>{}
+      });
+      // Si ya teníamos un token guardado y vigente, entramos directo sin pedir nada.
+      if(accessToken && Date.now() < tokenExpiry - 60000){
+        iniciarApp();
+      }
+    }else{
+      setTimeout(esperarGis, 200);
+    }
+  }
+  esperarGis();
+
+  btnConectarGoogle.addEventListener("click", async ()=>{
+    btnConectarGoogle.disabled = true;
+    loginEstado.textContent = "Abriendo inicio de sesión de Google…";
+    try{
+      await ensureToken(true);
+      await iniciarApp();
+    }catch(err){
+      loginEstado.textContent = "No se pudo conectar: " + err.message;
+    }finally{
+      btnConectarGoogle.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
